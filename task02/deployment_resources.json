@@ -22,14 +22,14 @@
       ],
       "Version": "2012-10-17"
     },
-    "resource_type": "iam_policy"
-  },
-  "hello_world-role": {
-    "predefined_policies": [],
-    "principal_service": "lambda",
-    "custom_policies": [
-      "lambda-basic-execution"
-    ],
-    "resource_type": "iam_role"
+    "resource_type": "iam_policy",
+    "hello_world-role": {
+      "predefined_policies": [],
+      "principal_service": "lambda",
+      "custom_policies": [
+        "lambda-basic-execution"
+      ],
+      "resource_type": "iam_role"
+    }
   }
 }
