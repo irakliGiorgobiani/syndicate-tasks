@@ -20,6 +20,7 @@
     "url_config": {
       "auth_type": "NONE"
     },
+    "alias" : "${lambdas_alias_name}",
     "logs_expiration" : "${logs_expiration}",
     "snap_start" : "None"
   }
