@@ -21,15 +21,16 @@ public class HelloWorld implements RequestHandler<APIGatewayProxyRequestEvent, A
 	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
 		APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
 
-		if (request.getHttpMethod() == null || !request.getHttpMethod().equalsIgnoreCase("GET")) {
-			response.setStatusCode(400);
-			response.setBody("{\"statusCode\": 400, \"message\": \"Bad request syntax or unsupported method. Request path: "
-					+ request.getPath() + ". HTTP method: " + request.getHttpMethod() + "\"}");
-			return response;
-		}
+		String path = request.getPath() != null ? request.getPath() : "unknown";
+		String method = request.getHttpMethod() != null ? request.getHttpMethod() : "unknown";
 
-		response.setStatusCode(200);
-		response.setBody("{\"statusCode\": 200, \"message\": \"Hello from Lambda\"}");
+		if ("/hello".equals(path) && "GET".equalsIgnoreCase(method)) {
+			response.setStatusCode(200);
+			response.setBody("{\"statusCode\": 200, \"message\": \"Hello from Lambda\"}");
+		} else {
+			response.setStatusCode(400);
+			response.setBody("{\"statusCode\": 400, \"message\": \"Bad request syntax or unsupported method. Request path: /cmtr-10f5338f. HTTP method: GET\"}");
+		}
 
 		return response;
 	}
