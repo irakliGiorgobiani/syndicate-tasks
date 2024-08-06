@@ -10,8 +10,7 @@ import com.syndicate.deployment.model.RetentionSetting;
 @LambdaHandler(
 		lambdaName = "hello_world",
 		roleName = "hello_world-role",
-		isPublishVersion = true,
-		aliasName = "${lambdas_alias_name}",
+		isPublishVersion = false,
 		logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 public class HelloWorld implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {

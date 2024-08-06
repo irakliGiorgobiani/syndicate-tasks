@@ -17,10 +17,9 @@
     "event_sources" : [ ],
     "env_variables" : { },
     "publish_version" : false,
-    "url_config": {
-      "auth_type": "NONE"
+    "url_config" : {
+      "auth_type" : "NONE"
     },
-    "alias" : "${lambdas_alias_name}",
     "logs_expiration" : "${logs_expiration}",
     "snap_start" : "None"
   }
