@@ -17,10 +17,11 @@
     "event_sources" : [ ],
     "env_variables" : { },
     "publish_version" : false,
-    "url_config" : {
-      "auth_type" : "NONE"
-    },
     "logs_expiration" : "${logs_expiration}",
-    "snap_start" : "None"
+    "snap_start" : "None",
+    "url_config" : {
+      "auth_type" : "NONE",
+      "invoke_mode" : "BUFFERED"
+    }
   }
 }
