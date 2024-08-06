@@ -19,11 +19,17 @@ public class HelloWorld implements RequestHandler<APIGatewayProxyRequestEvent, A
 
 	@Override
 	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
-		System.out.println("Hello from lambda");
-
 		APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
+
+		if (request.getHttpMethod() == null || !request.getHttpMethod().equalsIgnoreCase("GET")) {
+			response.setStatusCode(400);
+			response.setBody("{\"statusCode\": 400, \"message\": \"Bad request syntax or unsupported method. Request path: "
+					+ request.getPath() + ". HTTP method: " + request.getHttpMethod() + "\"}");
+			return response;
+		}
+
 		response.setStatusCode(200);
-		response.setBody("Hello from Lambda");
+		response.setBody("{\"statusCode\": 200, \"message\": \"Hello from Lambda\"}");
 
 		return response;
 	}
