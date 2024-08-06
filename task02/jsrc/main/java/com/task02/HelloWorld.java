@@ -23,7 +23,7 @@ public class HelloWorld implements RequestHandler<APIGatewayProxyRequestEvent, A
 
 		System.out.println(request.getPath());
 
-		if ("/hello".equals(request.getPath()) && "GET".equalsIgnoreCase(request.getHttpMethod())) {
+		if (request.getPath().contains("/hello") && "GET".equalsIgnoreCase(request.getHttpMethod())) {
 			response.setStatusCode(200);
 			response.setBody("{\"statusCode\": 200, \"message\": \"Hello from Lambda\"}");
 		} else {
