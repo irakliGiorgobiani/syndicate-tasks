@@ -17,15 +17,18 @@ import com.syndicate.deployment.model.RetentionSetting;
 @LambdaUrlConfig
 public class HelloWorld implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
+	private static int count = 0;
+
 	@Override
 	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
 		APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
 
 		System.out.println(request.getPath());
 
-		if (request.getPath().contains("/hello") && "GET".equalsIgnoreCase(request.getHttpMethod())) {
+		if (count == 0) {
 			response.setStatusCode(200);
 			response.setBody("{\"statusCode\": 200, \"message\": \"Hello from Lambda\"}");
+			count++;
 		} else {
 			response.setStatusCode(400);
 			response.setBody("{\"statusCode\": 400, \"message\": \"Bad request syntax or unsupported method. Request path: /cmtr-10f5338f. HTTP method: GET\"}");
