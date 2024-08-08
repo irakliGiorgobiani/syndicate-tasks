@@ -12,12 +12,10 @@ import com.syndicate.deployment.model.RetentionSetting;
 import java.util.HashMap;
 import java.util.Map;
 
-@LambdaHandler(
-    lambdaName = "sqs_handler",
-	roleName = "sqs_handler-role",
-	isPublishVersion = false,
-	aliasName = "${lambdas_alias_name}",
-	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
+@LambdaHandler(lambdaName = "sqs_handler",
+		roleName = "sqs_handler-role",
+		isPublishVersion = false,
+		logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @SqsTriggerEventSource(targetQueue = "async_queue", batchSize = 1)
 @DependsOn(name = "async_queue", resourceType = ResourceType.SQS_QUEUE)

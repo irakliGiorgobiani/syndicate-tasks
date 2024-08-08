@@ -50,7 +50,6 @@
     "message_retention_period": 60,
     "receive_message_wait_time_seconds": 0,
     "policy": {},
-    "redrive_policy": {},
     "content_based_deduplication": false
   },
   "lambda_topic": {

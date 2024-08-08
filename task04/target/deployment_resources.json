@@ -52,7 +52,6 @@
     } ],
     "env_variables" : { },
     "publish_version" : false,
-    "alias" : "${lambdas_alias_name}",
     "logs_expiration" : "${logs_expiration}",
     "snap_start" : "None"
   }
