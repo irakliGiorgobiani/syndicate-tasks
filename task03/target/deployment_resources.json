@@ -1,0 +1,28 @@
+{
+  "hello_world" : {
+    "name" : "hello_world",
+    "lambda_path" : "C:\\Users\\dell\\syndicate\\syndicate-tasks\\task03",
+    "version" : "1.0.0",
+    "func_name" : "com.task03.HelloWorld",
+    "deployment_package" : "task03-1.0.0.jar",
+    "resource_type" : "lambda",
+    "runtime" : "java11",
+    "architectures" : [ "x86_64" ],
+    "iam_role_name" : "hello_world-role",
+    "memory" : 1024,
+    "timeout" : 300,
+    "subnet_ids" : [ ],
+    "security_group_ids" : [ ],
+    "dependencies" : [ ],
+    "event_sources" : [ ],
+    "env_variables" : { },
+    "publish_version" : false,
+    "alias" : "${lambdas_alias_name}",
+    "logs_expiration" : "${logs_expiration}",
+    "snap_start" : "None",
+    "url_config" : {
+      "auth_type" : "NONE",
+      "invoke_mode" : "BUFFERED"
+    }
+  }
+}
