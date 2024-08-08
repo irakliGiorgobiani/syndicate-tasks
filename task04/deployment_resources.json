@@ -14,7 +14,8 @@
             "dynamodb:DeleteItem",
             "ssm:PutParameter",
             "ssm:GetParameter",
-            "kms:Decrypt"
+            "kms:Decrypt",
+            "lambda:CreateEventSourceMapping"
           ],
           "Effect": "Allow",
           "Resource": "*"
@@ -24,16 +25,16 @@
     },
     "resource_type": "iam_policy"
   },
-  "sqs_handler-role": {
-    "predefined_policies": [],
+  "sns_handler-role": {
+    "predefined_policies": ["AWSLambdaSQSQueueExecutionRole"],
     "principal_service": "lambda",
     "custom_policies": [
       "lambda-basic-execution"
     ],
     "resource_type": "iam_role"
   },
-  "sns_handler-role": {
-    "predefined_policies": [],
+  "sqs_handler-role": {
+    "predefined_policies": ["AWSLambdaSQSQueueExecutionRole"],
     "principal_service": "lambda",
     "custom_policies": [
       "lambda-basic-execution"
@@ -43,7 +44,6 @@
   "async_queue": {
     "resource_type": "sqs_queue",
     "fifo_queue": false,
-    "region": "eu-central-1",
     "visibility_timeout": 300,
     "delay_seconds": 0,
     "maximum_message_size": 1024,
