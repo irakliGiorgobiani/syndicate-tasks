@@ -1,0 +1,7 @@
+com\task05\dto\Response$ResponseBuilder.class
+com\task05\dto\Response.class
+com\task05\dto\Request$RequestBuilder.class
+com\task05\ApiHandler.class
+com\task05\dto\Event.class
+com\task05\dto\Request.class
+com\task05\dto\Event$EventBuilder.class
