@@ -30,7 +30,7 @@
     "runtimes" : [ "java11" ],
     "resource_type" : "lambda_layer",
     "deployment_package" : "weather-api-assembly.zip",
-    "libraries" : [ "lib/weather-api-1.0-SNAPSHOT.jar" ],
+    "libraries" : [ "lib/weather-client-api-1.0-SNAPSHOT.jar" ],
     "architectures" : [ "arm64" ]
   }
 }
