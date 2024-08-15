@@ -26,7 +26,7 @@ import java.util.Map;
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @LambdaLayer(layerName = "weather-api",
-		libraries = {"weather-layer/java/lib/weather-api-1.0-SNAPSHOT.jar"},
+		libraries = {"layer/java/lib/weather-api-1.0-SNAPSHOT.jar"},
 		runtime = DeploymentRuntime.JAVA11,
 		architectures = {Architecture.ARM64},
 		artifactExtension = ArtifactExtension.ZIP
