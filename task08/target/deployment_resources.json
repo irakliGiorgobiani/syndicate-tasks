@@ -24,5 +24,13 @@
       "auth_type" : "NONE",
       "invoke_mode" : "BUFFERED"
     }
+  },
+  "weather-api" : {
+    "name" : "weather-api",
+    "runtimes" : [ "java11" ],
+    "resource_type" : "lambda_layer",
+    "deployment_package" : "weather-api-assembly.zip",
+    "libraries" : [ "weather-layer/java/lib/weather-api-1.0-SNAPSHOT.jar" ],
+    "architectures" : [ "arm64" ]
   }
 }
