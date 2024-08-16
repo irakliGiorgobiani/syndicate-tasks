@@ -12,20 +12,24 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Scanner;
 
 @LambdaHandler(
 		lambdaName = "processor",
@@ -38,47 +42,81 @@ import java.util.UUID;
 @EnvironmentVariables(
 		@EnvironmentVariable(key = "target_table", value = "${target_table}")
 )
-public class Processor implements RequestHandler<Object, Map<String, Object>> {
+public class Processor implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayV2HTTPResponse> {
 
-	private static final String WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
-
-	private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
-	private final DynamoDB dynamoDB = new DynamoDB(client);
-	private final Table weatherTable = dynamoDB.getTable(System.getenv("target_table"));
+	private final AmazonDynamoDB amazonDynamoDBClient = AmazonDynamoDBClientBuilder.defaultClient();
+	private final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDBClient);
+	private final String tableName = System.getenv("target_table");
 
 	@Override
-	public Map<String, Object> handleRequest(Object request, Context context) {
-		Map<String, Object> result = new HashMap<>();
+	public APIGatewayV2HTTPResponse handleRequest(APIGatewayProxyRequestEvent request, Context context) {
+		APIGatewayV2HTTPResponse response;
 		try {
-			HttpClient httpClient = HttpClient.newHttpClient();
-			HttpRequest httpRequest = HttpRequest.newBuilder()
-					.uri(URI.create(WEATHER_API_URL))
+			String weatherData = fetchWeatherData();
+			ObjectMapper objectMapper = new ObjectMapper();
+
+			JsonNode forecastNode = objectMapper.readTree(weatherData);
+
+			Map<String, Object> forecastMap = new HashMap<>();
+			forecastMap.put("elevation", forecastNode.path("elevation").asDouble());
+			forecastMap.put("generationtime_ms", forecastNode.path("generationtime_ms").asDouble());
+			forecastMap.put("latitude", forecastNode.path("latitude").asDouble());
+			forecastMap.put("longitude", forecastNode.path("longitude").asDouble());
+			forecastMap.put("timezone", forecastNode.path("timezone").asText());
+			forecastMap.put("timezone_abbreviation", forecastNode.path("timezone_abbreviation").asText());
+			forecastMap.put("utc_offset_seconds", forecastNode.path("utc_offset_seconds").asInt());
+
+			JsonNode hourlyNode = forecastNode.path("hourly");
+			Map<String, Object> hourlyMap = new HashMap<>();
+			hourlyMap.put("time", hourlyNode.path("time").findValuesAsText("time"));
+			hourlyMap.put("temperature_2m", hourlyNode.path("temperature_2m").findValuesAsText("time"));
+			forecastMap.put("hourly", hourlyMap);
+
+			JsonNode hourlyUnitsNode = forecastNode.path("hourly_units");
+			Map<String, String> hourlyUnitsMap = new HashMap<>();
+			hourlyUnitsMap.put("time", hourlyUnitsNode.path("time").asText());
+			hourlyUnitsMap.put("temperature_2m", hourlyUnitsNode.path("temperature_2m").asText());
+			forecastMap.put("hourly_units", hourlyUnitsMap);
+
+			String id = UUID.randomUUID().toString();
+
+			Table table = dynamoDB.getTable(tableName);
+			Item item = new Item()
+					.withPrimaryKey("id", id)
+					.withMap("forecast", forecastMap);
+			table.putItem(item);
+
+			// Build the successful response
+			response = APIGatewayV2HTTPResponse.builder()
+					.withStatusCode(200)
+					.withBody("Weather data successfully processed and stored.")
 					.build();
-			HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode rootNode = mapper.readTree(response.body());
-
-			JsonNode forecastNode = rootNode.get("hourly");
-
-			Map<String, AttributeValue> item = new HashMap<>();
-			item.put("id", new AttributeValue(UUID.randomUUID().toString()));
-			item.put("forecast", new AttributeValue(forecastNode.toString()));
-
-			PutItemRequest putItemRequest = new PutItemRequest()
-					.withTableName(System.getenv("target_table"))
-					.withItem(item);
-
-			PutItemResult putItemResult = client.putItem(putItemRequest);
-
-			result.put("status", "success");
-			result.put("message", "Weather data successfully stored in DynamoDB.");
-		} catch (IOException | InterruptedException e) {
-			context.getLogger().log("Error: " + e.getMessage());
-			result.put("status", "error");
-			result.put("message", "Error processing weather data.");
+		} catch (Exception ex) {
+			context.getLogger().log("Error: " + ex.getMessage());
+			response = APIGatewayV2HTTPResponse.builder()
+					.withStatusCode(500)
+					.withBody("{\"statusCode\": 500, \"message\": \"Internal Server Error\"} " + ex.getMessage())
+					.build();
 		}
 
-		return result;
+		return response;
+	}
+
+	private String fetchWeatherData() throws Exception {
+		URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=50.4375&longitude=30.5&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m");
+
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("GET");
+		
+		Scanner scanner = new Scanner((InputStream) conn.getContent());
+		StringBuilder response = new StringBuilder();
+
+		while (scanner.hasNext()) {
+			response.append(scanner.nextLine());
+		}
+
+		scanner.close();
+		return response.toString();
 	}
 }
