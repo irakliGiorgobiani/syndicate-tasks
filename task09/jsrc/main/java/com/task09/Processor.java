@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Scanner;
+import java.util.List;
+import java.util.ArrayList;
 
 @LambdaHandler(
 		lambdaName = "processor",
@@ -67,10 +69,28 @@ public class Processor implements RequestHandler<APIGatewayProxyRequestEvent, AP
 			forecastMap.put("utc_offset_seconds", forecastNode.path("utc_offset_seconds").asInt());
 
 			JsonNode hourlyNode = forecastNode.path("hourly");
-			Map<String, Object> hourlyMap = new HashMap<>();
-			hourlyMap.put("time", hourlyNode.path("time").asText());
-			hourlyMap.put("temperature_2m", hourlyNode.path("temperature_2m").asText());
-			forecastMap.put("hourly", hourlyMap);
+			JsonNode timeNode = hourlyNode.path("time");
+			JsonNode temperatureNode = hourlyNode.path("temperature_2m");
+
+			if (timeNode.isArray() && temperatureNode.isArray()) {
+				List<String> times = new ArrayList<>();
+				List<Double> temperatures = new ArrayList<>();
+
+				for (JsonNode time : timeNode) {
+					times.add(time.asText());
+				}
+
+				for (JsonNode temp : temperatureNode) {
+					temperatures.add(temp.asDouble());
+				}
+
+				Map<String, Object> hourlyMap = new HashMap<>();
+				hourlyMap.put("time", times);
+				hourlyMap.put("temperature_2m", temperatures);
+				forecastMap.put("hourly", hourlyMap);
+			} else {
+				throw new RuntimeException("Unexpected format in hourly data");
+			}
 
 			JsonNode hourlyUnitsNode = forecastNode.path("hourly_units");
 			Map<String, String> hourlyUnitsMap = new HashMap<>();
