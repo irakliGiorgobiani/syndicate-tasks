@@ -14,7 +14,12 @@
             "dynamodb:DeleteItem",
             "ssm:PutParameter",
             "ssm:GetParameter",
-            "kms:Decrypt"
+            "kms:Decrypt",
+            "xray:PutTraceSegments",
+            "xray:PutTelemetryRecords",
+            "xray:GetSamplingRules",
+            "xray:GetSamplingTargets",
+            "xray:GetSamplingStatisticSummaries"
           ],
           "Effect": "Allow",
           "Resource": "*"
@@ -25,7 +30,7 @@
     "resource_type": "iam_policy"
   },
   "processor-role": {
-    "predefined_policies": [],
+    "predefined_policies": ["AWSXRayDaemonWriteAccess"],
     "principal_service": "lambda",
     "custom_policies": [
       "lambda-basic-execution"

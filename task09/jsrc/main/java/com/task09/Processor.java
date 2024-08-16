@@ -68,8 +68,8 @@ public class Processor implements RequestHandler<APIGatewayProxyRequestEvent, AP
 
 			JsonNode hourlyNode = forecastNode.path("hourly");
 			Map<String, Object> hourlyMap = new HashMap<>();
-			hourlyMap.put("time", hourlyNode.path("time").findValuesAsText("time"));
-			hourlyMap.put("temperature_2m", hourlyNode.path("temperature_2m").findValuesAsText("time"));
+			hourlyMap.put("time", hourlyNode.path("time").asText());
+			hourlyMap.put("temperature_2m", hourlyNode.path("temperature_2m").asText());
 			forecastMap.put("hourly", hourlyMap);
 
 			JsonNode hourlyUnitsNode = forecastNode.path("hourly_units");
@@ -108,7 +108,7 @@ public class Processor implements RequestHandler<APIGatewayProxyRequestEvent, AP
 
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
-		
+
 		Scanner scanner = new Scanner((InputStream) conn.getContent());
 		StringBuilder response = new StringBuilder();
 
