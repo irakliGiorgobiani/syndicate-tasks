@@ -25,6 +25,7 @@ import com.syndicate.deployment.model.lambda.url.AuthType;
 import com.syndicate.deployment.model.lambda.url.InvokeMode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -148,46 +149,84 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 		}
 	}
 
-	private Map<String, Object> handleSignin(Map<String, Object> event, LambdaLogger logger) {
+	private Map<String, Object> handleSignin(Map<String, Object> inputEvent, LambdaLogger logger) {
+		logger.log("Initiating sign-in process.");
+		Map<String, Object> result = new HashMap<>();
+		ObjectMapper jsonMapper = new ObjectMapper();
+
 		try {
-			String bodyString = (String) event.get("body");
-			if (bodyString == null) {
-				throw new IllegalArgumentException("Request body is missing");
+			logger.log("Event received: " + inputEvent);
+
+			String eventBody = (String) inputEvent.get("body");
+			if (eventBody == null) {
+				throw new IllegalArgumentException("Event body is missing.");
 			}
 
-			Map<String, Object> body = objectMapper.readValue(bodyString, Map.class);
-			String email = (String) body.get("email");
-			String password = (String) body.get("password");
+			Map<String, Object> parsedBody = jsonMapper.readValue(eventBody, Map.class);
+			logger.log("Parsed event body: " + parsedBody);
 
-			if (email == null || password == null) {
-				throw new IllegalArgumentException("Email or password is missing");
+			String emailAddress = (String) parsedBody.get("email");
+			String userPassword = (String) parsedBody.get("password");
+			logger.log("Email extracted: " + emailAddress);
+			logger.log("Password extracted: " + userPassword);
+
+			if (validateEmailAndPassword(emailAddress, userPassword)) {
+				logger.log("Email validation failed for: " + emailAddress + " Or Password validation failed");
+				throw new IllegalArgumentException("Invalid email or password");
 			}
-			validateEmailAndPassword(email, password);
+			logger.log("Password validated successfully.");
 
-			String userPoolId = getUserPoolIdByName(System.getenv("booking_userpool"))
-					.orElseThrow(() -> new IllegalArgumentException("No such user pool"));
-			String clientId = getClientIdByUserPoolName(System.getenv("booking_userpool"))
-					.orElseThrow(() -> new IllegalArgumentException("No such client ID"));
+			String poolId = getUserPoolIdByName(System.getenv("booking_userpool"))
+					.orElseThrow(() -> new IllegalArgumentException("User pool not found"));
+			logger.log("User pool ID obtained: " + poolId);
+
+			String appClientId = getClientIdByUserPoolName(System.getenv("booking_userpool"))
+					.orElseThrow(() -> new IllegalArgumentException("Client ID not found"));
+			logger.log("Client ID obtained: " + appClientId);
+
+			Map<String, String> authenticationParams = new HashMap<>();
+			authenticationParams.put("USERNAME", emailAddress);
+			authenticationParams.put("PASSWORD", userPassword);
+			logger.log("Auth parameters: " + authenticationParams);
 
 			AdminInitiateAuthRequest authRequest = new AdminInitiateAuthRequest()
 					.withAuthFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
-					.withUserPoolId(userPoolId)
-					.withClientId(clientId)
-					.withAuthParameters(Map.of("USERNAME", email, "PASSWORD", password));
+					.withUserPoolId(poolId)
+					.withClientId(appClientId)
+					.withAuthParameters(authenticationParams);
+			logger.log("Auth request details: " + authRequest);
 
-			AdminInitiateAuthResult result = cognitoClient.adminInitiateAuth(authRequest);
+			AdminInitiateAuthResult authResult = cognitoClient.adminInitiateAuth(authRequest);
+			logger.log("Auth result details: " + authResult);
 
-			if (result.getAuthenticationResult() != null) {
-				String accessToken = result.getAuthenticationResult().getIdToken();
-				return createSuccessResponse(Map.of("accessToken", accessToken));
+			if (authResult.getAuthenticationResult() != null) {
+				String idToken = authResult.getAuthenticationResult().getIdToken();
+				logger.log("Authentication successful. ID Token: " + idToken);
+
+				Map<String, Object> successResponse = new HashMap<>();
+				successResponse.put("accessToken", idToken);
+
+				result.put("statusCode", 200);
+				result.put("body", jsonMapper.writeValueAsString(successResponse));
+				logger.log("Successful response: " + successResponse);
 			} else {
-				throw new Exception("Authentication failed, no tokens returned.");
+				logger.log("Authentication failed: No tokens were returned.");
+				throw new IllegalStateException("Failed to receive authentication tokens.");
 			}
+		} catch (IllegalArgumentException | JsonProcessingException ex) {
+			logger.log("Error occurred: " + ex.getMessage());
+			result.put("statusCode", 400);
+			result.put("body", ex.getMessage());
 		} catch (Exception ex) {
-			logger.log("Exception encountered: " + ex.getMessage());
-			return createErrorResponse(400, ex.getMessage());
+			logger.log("Unexpected error: " + ex.getMessage());
+			result.put("statusCode", 500);
+			result.put("body", "Internal server error");
 		}
+
+		logger.log("Sign-in process concluded.");
+		return result;
 	}
+
 
 	private Map<String, Object> handleGetTables(LambdaLogger logger) {
 		try {
@@ -364,13 +403,15 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 		}
 	}
 
-	private void validateEmailAndPassword(String email, String password) {
+	private boolean validateEmailAndPassword(String email, String password) {
 		if (email == null || password == null) {
 			throw new IllegalArgumentException("Email and password must not be null.");
 		}
 		if (!Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$").matcher(email).matches()) {
 			throw new IllegalArgumentException("Invalid email format.");
 		}
+
+		return true;
 	}
 
 	private Map<String, Object> createSuccessResponse(Object body) {
