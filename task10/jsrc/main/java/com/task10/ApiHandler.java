@@ -98,6 +98,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			validateCredentials(email, password, logger);
 
 			String userPoolId = retrieveUserPoolId(logger);
+			logger.log("Using User Pool ID: " + userPoolId);
+
 			ListUsersRequest listUsersRequest = new ListUsersRequest()
 					.withUserPoolId(userPoolId)
 					.withFilter("email = \"" + email + "\"");
@@ -115,7 +117,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 					.withUserAttributes(new AttributeType().withName("email").withValue(email))
 					.withMessageAction(MessageActionType.SUPPRESS);
 
-			cognitoClient.adminCreateUser(createUserRequest);
+			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(createUserRequest);
+			logger.log("Create User Result: " + createUserResult);
 
 			AdminSetUserPasswordRequest setUserPasswordRequest = new AdminSetUserPasswordRequest()
 					.withUserPoolId(userPoolId)
@@ -128,8 +131,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			response.put("body", "User created successfully");
 		} catch (Exception ex) {
 			logger.log("Signup Error: " + ex.getMessage());
-			response.put("statusCode", 400);
-			response.put("body", ex.getMessage());
+			response.put("statusCode", 500);
+			response.put("body", "Internal Server Error");
 		}
 		return response;
 	}
@@ -170,12 +173,11 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 		return response;
 	}
 
-	private void validateCredentials(String email, String password, LambdaLogger logger) {
+	private void validateCredentials(String email, String password, LambdaLogger logger) throws IllegalArgumentException {
 		if (!isValidEmail(email)) {
 			logger.log("Invalid email: " + email);
 			throw new IllegalArgumentException("Email is invalid");
 		}
-
 		if (!isValidPassword(password)) {
 			logger.log("Invalid password: " + password);
 			throw new IllegalArgumentException("Password is invalid");
