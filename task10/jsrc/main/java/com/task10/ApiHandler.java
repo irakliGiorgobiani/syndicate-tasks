@@ -170,11 +170,11 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			logger.log("Email extracted: " + emailAddress);
 			logger.log("Password extracted: " + userPassword);
 
-			if (validateEmailAndPassword(emailAddress, userPassword)) {
+			if (!validateEmailAndPassword(emailAddress, userPassword)) {
 				logger.log("Email validation failed for: " + emailAddress + " Or Password validation failed");
 				throw new IllegalArgumentException("Invalid email or password");
 			}
-			logger.log("Password validated successfully.");
+			logger.log("Email and Password validated successfully.");
 
 			String poolId = getUserPoolIdByName(System.getenv("booking_userpool"))
 					.orElseThrow(() -> new IllegalArgumentException("User pool not found"));
@@ -406,6 +406,9 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 	private boolean validateEmailAndPassword(String email, String password) {
 		if (email == null || password == null) {
 			throw new IllegalArgumentException("Email and password must not be null.");
+		}
+		if (email.isEmpty() || password.isEmpty()) {
+			throw new IllegalArgumentException("Email and password must not be empty.");
 		}
 		if (!Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$").matcher(email).matches()) {
 			throw new IllegalArgumentException("Invalid email format.");
