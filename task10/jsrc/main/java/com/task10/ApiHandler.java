@@ -67,22 +67,15 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 		try {
 			String httpMethod = (String) event.get("httpMethod");
-			Map<String, Object> queryStringParameters = (Map<String, Object>) event.get("queryStringParameters");
+			String path = (String) event.get("path");
 
-			if (httpMethod.equals("GET") && queryStringParameters != null) {
-				String tableId = (String) queryStringParameters.get("id");
-				Map<String, Object> item = handleGetTableById(tableId, logger);
-
-				if (item != null && !item.isEmpty()) {
-					response.put("statusCode", 200);
-					response.put("body", item);
-				} else {
-					response.put("statusCode", 404);
-					response.put("body", "Item not found");
-				}
+			if ("/signup".equals(path) && "POST".equals(httpMethod)) {
+				return handleSignup(event, logger);
+			} else if ("/signin".equals(path) && "POST".equals(httpMethod)) {
+				return handleSignin(event, logger);
 			} else {
 				response.put("statusCode", 400);
-				response.put("body", "Bad Request");
+				response.put("body", "Unsupported path or method");
 			}
 		} catch (Exception e) {
 			logger.log("Error: " + e.getMessage());
@@ -105,6 +98,17 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			validateCredentials(email, password, logger);
 
 			String userPoolId = retrieveUserPoolId(logger);
+			ListUsersRequest listUsersRequest = new ListUsersRequest()
+					.withUserPoolId(userPoolId)
+					.withFilter("email = \"" + email + "\"");
+			ListUsersResult listUsersResult = cognitoClient.listUsers(listUsersRequest);
+
+			if (!listUsersResult.getUsers().isEmpty()) {
+				response.put("statusCode", 400);
+				response.put("body", "User already exists");
+				return response;
+			}
+
 			AdminCreateUserRequest createUserRequest = new AdminCreateUserRequest()
 					.withUserPoolId(userPoolId)
 					.withUsername(email)
@@ -184,7 +188,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 	}
 
 	private boolean isValidPassword(String password) {
-		return password.length() >= 8;
+		Matcher matcher = Pattern.compile("^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[\\$%\\^\\*]).{12,}$").matcher(password);
+		return matcher.matches();
 	}
 
 	private String retrieveUserPoolId(LambdaLogger logger) {
