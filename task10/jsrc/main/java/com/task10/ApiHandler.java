@@ -150,11 +150,18 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 	private Map<String, Object> handleSignin(Map<String, Object> event, LambdaLogger logger) {
 		try {
-			Map<String, Object> body = objectMapper.readValue((String) event.get("body"), Map.class);
+			String bodyString = (String) event.get("body");
+			if (bodyString == null) {
+				throw new IllegalArgumentException("Request body is missing");
+			}
 
+			Map<String, Object> body = objectMapper.readValue(bodyString, Map.class);
 			String email = (String) body.get("email");
 			String password = (String) body.get("password");
 
+			if (email == null || password == null) {
+				throw new IllegalArgumentException("Email or password is missing");
+			}
 			validateEmailAndPassword(email, password);
 
 			String userPoolId = getUserPoolIdByName(System.getenv("booking_userpool"))
