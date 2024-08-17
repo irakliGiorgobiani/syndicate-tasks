@@ -60,56 +60,39 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 	private final DynamoDB dynamoDB = new DynamoDB(dynamoDBClient);
 	private final AWSCognitoIdentityProvider cognitoClient = AWSCognitoIdentityProviderClientBuilder.defaultClient();
 
-	public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {
+	@Override
+	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
 		LambdaLogger logger = context.getLogger();
-		logger.log("Received request: " + request);
+		Map<String, Object> response = new HashMap<>();
 
-		String path = (String) request.get("path");
-		String httpMethod = (String) request.get("httpMethod");
-
-		Map<String, Object> responseMap = new LinkedHashMap<>();
 		try {
-			switch (httpMethod.toUpperCase()) {
-				case "GET":
-					if (path.equals("/tables")) {
-						responseMap = handleGetTables(logger);
-					} else if (path.matches("/tables/\\d+")) {
-						String tableId = path.split("/")[2];
-						responseMap = handleGetTableById(tableId, logger);
-					} else if (path.equals("/reservations")) {
-						responseMap = handleGetReservations(logger);
-					} else {
-						responseMap.put("statusCode", 400);
-						responseMap.put("body", "Invalid GET path.");
-					}
-					break;
-				case "POST":
-					if (path.equals("/tables")) {
-						responseMap = handleCreateTable(request, logger);
-					} else if (path.equals("/signup")) {
-						responseMap = handleSignup(request, logger);
-					} else if (path.equals("/signin")) {
-						responseMap = handleSignin(request, logger);
-					} else if (path.equals("/reservations")) {
-						responseMap = handleCreateReservation(request, logger);
-					} else {
-						responseMap.put("statusCode", 400);
-						responseMap.put("body", "Invalid POST path.");
-					}
-					break;
-				default:
-					responseMap.put("statusCode", 405);
-					responseMap.put("body", "Method Not Allowed.");
-					break;
+			String httpMethod = (String) event.get("httpMethod");
+			Map<String, Object> queryStringParameters = (Map<String, Object>) event.get("queryStringParameters");
+
+			if (httpMethod.equals("GET") && queryStringParameters != null) {
+				String tableId = (String) queryStringParameters.get("id");
+				Map<String, Object> item = handleGetTableById(tableId, logger);
+
+				if (item != null && !item.isEmpty()) {
+					response.put("statusCode", 200);
+					response.put("body", item);
+				} else {
+					response.put("statusCode", 404);
+					response.put("body", "Item not found");
+				}
+			} else {
+				response.put("statusCode", 400);
+				response.put("body", "Bad Request");
 			}
 		} catch (Exception e) {
 			logger.log("Error: " + e.getMessage());
-			responseMap.put("statusCode", 500);
-			responseMap.put("body", "Internal server error.");
+			response.put("statusCode", 500);
+			response.put("body", "Internal Server Error");
 		}
 
-		return responseMap;
+		return response;
 	}
+
 
 	private Map<String, Object> handleSignup(Map<String, Object> event, LambdaLogger logger) {
 		Map<String, Object> response = new HashMap<>();
