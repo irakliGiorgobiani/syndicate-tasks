@@ -29,7 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 @LambdaHandler(
 		lambdaName = "api_handler",
@@ -171,10 +170,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			logger.log("Email extracted: " + emailAddress);
 			logger.log("Password extracted: " + userPassword);
 
-			if (!validateEmailAndPassword(emailAddress, userPassword)) {
-				throw new IllegalArgumentException("Ivalid email or password");
-			}
-			logger.log("Email and Password validated successfully.");
+			validateEmailAndPassword(emailAddress, userPassword);
+			logger.log("Password validated successfully.");
 
 			String poolId = getUserPoolIdByName(System.getenv("booking_userpool"))
 					.orElseThrow(() -> new IllegalArgumentException("User pool not found"));
@@ -404,19 +401,14 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 	}
 
 	private boolean validateEmailAndPassword(String email, String password) {
-		final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
-		final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
 		if (email == null || password == null) {
-			return false;
+			throw new IllegalArgumentException("Email and password must not be null.");
+		}
+		if (!Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$").matcher(email).matches()) {
+			throw new IllegalArgumentException("Invalid email format.");
 		}
 
-		Matcher matcher = pattern.matcher(email);
-		return matcher.matches() && password.length() >= 8 &&
-				password.length() <= 20 &&
-				password.matches(".*[A-Z].*") &&
-				password.matches(".*[a-z].*") &&
-				password.matches(".*\\d.*") &&
-				password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*");
+		return true;
 	}
 
 	private Map<String, Object> createSuccessResponse(Object body) {
