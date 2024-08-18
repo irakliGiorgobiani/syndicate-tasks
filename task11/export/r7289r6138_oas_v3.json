@@ -17,6 +17,8 @@
   "paths": {
     "/reservations": {
       "get": {
+        "summary": "Get Reservations",
+        "description": "Retrieve a list of reservations",
         "responses": {
           "200": {
             "description": "200 response",
@@ -47,6 +49,19 @@
         }
       },
       "post": {
+        "summary": "Create Reservation",
+        "description": "Create a new reservation",
+        "requestBody": {
+          "description": "Reservation details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "200 response",
@@ -79,6 +94,8 @@
     },
     "/tables": {
       "get": {
+        "summary": "Get Tables",
+        "description": "Retrieve a list of tables",
         "responses": {
           "200": {
             "description": "200 response",
@@ -109,6 +126,19 @@
         }
       },
       "post": {
+        "summary": "Create Table",
+        "description": "Create a new table",
+        "requestBody": {
+          "description": "Table details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "200 response",
@@ -141,6 +171,19 @@
     },
     "/signin": {
       "post": {
+        "summary": "User Signin",
+        "description": "Authenticate a user",
+        "requestBody": {
+          "description": "Signin credentials",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "200 response",
@@ -168,6 +211,19 @@
     },
     "/signup": {
       "post": {
+        "summary": "User Signup",
+        "description": "Register a new user",
+        "requestBody": {
+          "description": "Signup details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Empty"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "200 response",
@@ -195,6 +251,8 @@
     },
     "/tables/{tableId}": {
       "get": {
+        "summary": "Get Table by ID",
+        "description": "Retrieve table details by ID",
         "parameters": [
           {
             "name": "tableId",
