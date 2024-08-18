@@ -68,10 +68,9 @@
     "global_indexes": [],
     "autoscaling": []
   },
-  "api-host": {
+  "api-ui-hoster": {
     "resource_type": "s3_bucket",
     "acl": "public-read",
-    "location": "eu-central-1",
     "cors": [],
     "policy": {
       "Version": "2012-10-17",
