@@ -1,0 +1,40 @@
+{
+  "api_handler" : {
+    "name" : "api_handler",
+    "lambda_path" : "C:\\Users\\dell\\syndicate\\syndicate-tasks\\task11",
+    "version" : "1.0.0",
+    "func_name" : "com.task11.ApiHandler",
+    "deployment_package" : "task11-1.0.0.jar",
+    "resource_type" : "lambda",
+    "runtime" : "java11",
+    "architectures" : [ "x86_64" ],
+    "iam_role_name" : "api_handler-role",
+    "memory" : 1024,
+    "timeout" : 300,
+    "subnet_ids" : [ ],
+    "security_group_ids" : [ ],
+    "dependencies" : [ {
+      "resource_name" : "${tables_table}",
+      "resource_type" : "dynamodb_table"
+    }, {
+      "resource_name" : "${reservations_table}",
+      "resource_type" : "dynamodb_table"
+    }, {
+      "resource_name" : "${booking_userpool}",
+      "resource_type" : "cognito_idp"
+    } ],
+    "event_sources" : [ ],
+    "env_variables" : {
+      "reservations_table" : "${reservations_table}",
+      "tables_table" : "${tables_table}",
+      "booking_userpool" : "${booking_userpool}",
+      "region" : "${region}"
+    },
+    "publish_version" : false,
+    "snap_start" : "None",
+    "url_config" : {
+      "auth_type" : "NONE",
+      "invoke_mode" : "BUFFERED"
+    }
+  }
+}
